@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="id">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Serigala — Midnight Howl</title>
+  <style>
+    /* Reset */
+    *{box-sizing:border-box;margin:0;padding:0}
+    html,body{height:100%}
+
+    :root{
+      --bg1:#0b0710; /* hitam keunguan gelap */
+      --bg2:#1b0f28; /* gradasi keunguan */
+      --accent:#8a4fff; /* ungu cerah */
+      --muted:#bdb1d6;
+      --glass: rgba(255,255,255,0.03);
+    }
+
+    body{
+      font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial;
+      background: radial-gradient(1200px 600px at 10% 10%, rgba(138,79,255,0.06), transparent), linear-gradient(180deg,var(--bg1),var(--bg2));
+      color: #eae7f7;
+      -webkit-font-smoothing:antialiased;
+      -moz-osx-font-smoothing:grayscale;
+      overflow-x:hidden;
+    }
+
+    /* Stars canvas will cover the page */
+    #stars{
+      position:fixed;inset:0;z-index:0;pointer-events:none;
+    }
+
+    /* Header */
+    header{
+      position:relative;z-index:5;padding:28px 32px;display:flex;align-items:center;justify-content:space-between;
+      backdrop-filter: blur(6px);
+    }
+    .logo{display:flex;gap:12px;align-items:center}
+    .logo .badge{width:48px;height:48px;border-radius:10px;background:linear-gradient(135deg,var(--accent),#3f2a88);display:flex;align-items:center;justify-content:center;box-shadow:0 6px 18px rgba(0,0,0,0.6);}
+    .logo svg{width:26px;height:26px;filter:drop-shadow(0 6px 18px rgba(138,79,255,0.12))}
+    .site-title{font-weight:700;letter-spacing:0.6px}
+    .site-sub{font-size:12px;color:var(--muted);margin-top:2px}
+
+    /* Hero */
+    .hero{min-height:75vh;display:grid;place-items:center;position:relative;z-index:2;padding:40px 20px}
+    .panel{width:min(1100px,92%);display:grid;grid-template-columns:1fr 420px;gap:28px;align-items:center}
+    .copy h1{font-size:clamp(30px,5vw,56px);line-height:1.02;margin-bottom:12px;text-shadow:0 6px 28px rgba(0,0,0,0.6);}
+    .copy p{color:var(--muted);margin-bottom:18px}
+    .btn-row{display:flex;gap:12px}
+    .btn{padding:12px 18px;border-radius:12px;background:linear-gradient(90deg,rgba(138,79,255,0.14),rgba(63,42,136,0.06));border:1px solid rgba(255,255,255,0.04);cursor:pointer;backdrop-filter:blur(6px);}
+    .btn.primary{background:linear-gradient(90deg,var(--accent),#5a37e3);color:#fff;font-weight:600;box-shadow:0 8px 30px rgba(138,79,255,0.14);transform:translateY(0);transition:transform .22s ease}
+    .btn.primary:hover{transform:translateY(-4px)}
+
+    /* Card with moon & wolf */
+    .scene{position:relative;background:linear-gradient(180deg, rgba(255,255,255,0.02), transparent);border-radius:20px;padding:20px;overflow:hidden;border:1px solid rgba(255,255,255,0.03);box-shadow:0 10px 40px rgba(0,0,0,0.6)}
+    .moon{position:absolute;right:-60px;top:-60px;width:240px;height:240px;border-radius:50%;background:radial-gradient(circle at 30% 30%, #fff7, #ffd, transparent 45%), linear-gradient(180deg,#fff2,#cdb0ff);filter:blur(6px);opacity:.9;mix-blend-mode:screen;z-index:1;animation:float 6s ease-in-out infinite}
+    @keyframes float{0%{transform:translateY(0) rotate(0)}50%{transform:translateY(-12px) rotate(4deg)}100%{transform:translateY(0) rotate(0)}}
+
+    .hill{position:relative;height:260px;display:flex;align-items:flex-end;justify-content:center}
+    .hill::before{content:'';position:absolute;left:0;right:0;bottom:0;height:180px;background:linear-gradient(180deg,transparent,#05030a 40%);clip-path:ellipse(60% 40% at 50% 80%);transform:translateY(20px);}
+
+    /* Wolf silhouette as SVG */
+    .wolf{position:relative;z-index:4;width:84%;max-width:420px;margin-bottom:12px;filter:drop-shadow(0 22px 40px rgba(0,0,0,0.7))}
+    .wolf svg{width:100%;height:auto;display:block}
+    /* Howl animation */\    
+    .howl{transform-origin:50% 100%;animation:howl 5s ease-in-out infinite}
+    @keyframes howl{0%{transform:translateY(0) rotate(0)}45%{transform:translateY(-6px) rotate(-1deg)}55%{transform:translateY(-6px) rotate(1deg)}100%{transform:translateY(0) rotate(0)}}
+
+    /* Glow line animation */
+    .glow-line{position:absolute;left:50%;top:8%;width:2px;height:60vh;background:linear-gradient(180deg,transparent,var(--accent));opacity:.06;transform:translateX(-50%);animation:glow 3s linear infinite}
+    @keyframes glow{0%{opacity:.02}50%{opacity:.12}100%{opacity:.02}}
+
+    /* Footer */
+    footer{padding:28px 32px;text-align:center;color:var(--muted);font-size:13px}
+
+    /* Responsive */
+    @media (max-width:900px){
+      .panel{grid-template-columns:1fr;}
+      .moon{right:-120px;top:-80px;width:180px;height:180px}
+      .wolf{max-width:320px}
+    }
+
+    /* Small interactive decorative elements */
+    .neon-text{display:inline-block;padding:6px 10px;border-radius:8px;background:linear-gradient(90deg,rgba(138,79,255,0.06),transparent);box-shadow:0 6px 28px rgba(138,79,255,0.06);}
+
+    /* subtle floating badges */
+    .badge-float{position:absolute;left:14px;top:40%;transform:translateY(-50%);padding:10px 14px;border-radius:12px;background:linear-gradient(180deg,rgba(255,255,255,0.02),transparent);border:1px solid rgba(255,255,255,0.03)}
+
+  </style>
+</head>
+<body>
+  <canvas id="stars"></canvas>
+
+  <header>
+    <div class="logo">
+      <div class="badge" aria-hidden>
+        <!-- small wolf icon -->
+        <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+          <path d="M3 12c3-4 6-6 9-6s6 2 9 6c-3 0-6-2-9-2s-6 2-9 2z" fill="white" opacity="0.06"/>
+          <path d="M4 12c2-3 4-5 8-5 2 0 4 1 7 4-3-1-5-1-7-1s-5 1-8 2z" fill="white"/>
+        </svg>
+      </div>
+      <div>
+        <div class="site-title">Midnight Howl</div>
+        <div class="site-sub">Tema: Serigala, warna hitam-keunguan</div>
+      </div>
+    </div>
+    <nav style="display:flex;gap:10px;align-items:center">
+      <button class="btn">About</button>
+      <button class="btn primary">Listen</button>
+    </nav>
+  </header>
+
+  <main class="hero">
+    <div class="panel">
+      <div class="copy">
+        <h1 class="neon-text">Suara malam. Jejak serigala.</h1>
+        <p>Halaman demo bertema serigala. Latar gelap keunguan dengan animasi bulan, bintang, dan siluet serigala yang melompat serta efek glow. Cocok untuk landing page, portofolio, atau proyek kreatif.</p>
+        <div class="btn-row">
+          <button class="btn primary" onclick="document.querySelector('#audio').play()">Putar Howl</button>
+          <button class="btn" onclick="toggleStars()">Toggle Bintang</button>
+        </div>
+      </div>
+
+      <div class="scene" role="img" aria-label="Siluet serigala di bukit saat bulan purnama">
+        <div class="moon" aria-hidden></div>
+        <div class="glow-line" aria-hidden></div>
+        <div class="hill">
+          <div class="wolf howl" title="Siluet serigala">
+            <!-- simple wolf silhouette SVG (stylized) -->
+            <svg viewBox="0 0 800 500" xmlns="http://www.w3.org/2000/svg" aria-hidden>
+              <defs>
+                <linearGradient id="g1" x1="0" x2="1">
+                  <stop offset="0" stop-color="#ffffff" stop-opacity="0.06"/>
+                  <stop offset="1" stop-color="#8a4fff" stop-opacity="0.12"/>
+                </linearGradient>
+              </defs>
+              <path d="M120 320 C80 300 60 240 120 210 C180 180 240 200 300 160 C360 120 440 100 500 120 C560 140 620 160 680 190 C730 215 740 260 700 300 C660 340 600 360 520 380 C460 395 380 410 300 400 C240 392 180 380 120 320 Z" fill="url(#g1)"/>
+              <path d="M420 120 C430 70 470 40 520 46 C560 50 600 80 620 120 C560 110 500 98 420 120 Z" fill="#1b0f28" opacity="0.6"/>
+              <!-- ear and muzzle accents -->
+              <path d="M200 220 C210 200 235 185 260 190" stroke="#d7c9ff" stroke-width="3" fill="none" opacity="0.18"/>
+              <path d="M520 220 C540 200 570 190 600 200" stroke="#d7c9ff" stroke-width="3" fill="none" opacity="0.12"/>
+            </svg>
+          </div>
+        </div>
+        <div class="badge-float">Midnight • 2025</div>
+      </div>
+    </div>
+  </main>
+
+  <audio id="audio" src="data:audio/mpeg;base64,//uQZAAAAAAAAAAAAAAAAAAAAAAAWGluZwAAAA8AAAACAAACcQCAgICAgICAgICAgICAgICAgICAg"></audio>
+
+  <footer>
+    Dibuat dengan ❤️ — Tema: Serigala. Tekan "Putar Howl" untuk efek audio (placeholder).
+  </footer>
+
+  <script>
+    // Stars canvas
+    const canvas = document.getElementById('stars');
+    const ctx = canvas.getContext('2d');
+    let W = canvas.width = innerWidth;
+    let H = canvas.height = innerHeight;
+    let stars = [];
+    let starCount = Math.floor((W*H)/80000);
+    let enabled = true;
+
+    function rand(min,max){return Math.random()*(max-min)+min}
+
+    function makeStars(){
+      stars = [];
+      for(let i=0;i<starCount;i++){
+        stars.push({x:rand(0,W),y:rand(0,H),r:Math.random()*1.6,dist:rand(0.1,1),tw:Math.random()*Math.PI*2});
+      }
+    }
+    function resize(){W=canvas.width=innerWidth;H=canvas.height=innerHeight;starCount = Math.floor((W*H)/80000);makeStars()}
+    addEventListener('resize',resize);
+
+    function draw(){
+      ctx.clearRect(0,0,W,H);
+      // subtle gradient
+      let g = ctx.createLinearGradient(0,0,0,H);
+      g.addColorStop(0,'rgba(10,6,18,0.0)');
+      g.addColorStop(1,'rgba(6,3,10,0.6)');
+      ctx.fillStyle = g;
+      ctx.fillRect(0,0,W,H);
+
+      if(enabled) stars.forEach(s=>{
+        s.tw += 0.01 + (s.dist*0.01);
+        const flick = 0.6 + Math.sin(s.tw)*0.4;
+        ctx.beginPath();
+        ctx.fillStyle = 'rgba(255,255,255,'+ (0.4 * s.dist * flick) +')';
+        ctx.arc(s.x, s.y, s.r * (0.6 + s.dist), 0, Math.PI*2);
+        ctx.fill();
+      });
+      requestAnimationFrame(draw);
+    }
+
+    makeStars();draw();
+
+    function toggleStars(){enabled = !enabled}
+
+    // parallax on mouse move for scene
+    const scene = document.querySelector('.scene');
+    window.addEventListener('mousemove',e=>{
+      const x = (e.clientX/window.innerWidth - 0.5)*20; // -10..10
+      const y = (e.clientY/window.innerHeight - 0.5)*10; // -5..5
+      document.querySelector('.moon').style.transform = `translate(${x}px, ${y}px)`;
+      document.querySelector('.wolf').style.transform = `translate(${x*0.6}px, ${y*0.6}px)`;
+    });
+
+    // Simple audio placeholder: when real audio not provided it does nothing
+    document.getElementById('audio').addEventListener('play', ()=>{
+      // small visual pulse when audio plays
+      document.querySelector('.glow-line').style.animation = 'glow 1.8s linear infinite';
+    });
+
+    // Accessibility: reduce motion
+    const mq = window.matchMedia('(prefers-reduced-motion: reduce)');
+    if(mq.matches){
+      document.querySelectorAll('.howl').forEach(el=>el.style.animation='none');
+      document.querySelector('.moon').style.animation='none';
+    }
+
+  </script>
+</body>
+</html>
